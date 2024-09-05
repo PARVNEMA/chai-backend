@@ -10,6 +10,21 @@ import fs from "fs";
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
   //TODO: get all videos based on query, sort, pagination
+
+  const allVideos = await Video.aggregate([
+    {
+      $match: {
+        isPublished: true,
+      },
+    },
+  ]);
+  if (allVideos.length == 0) {
+    throw new ApiError(400, "No videos of user");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, allVideos, "all videos fetched successfully"));
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -18,15 +33,15 @@ const publishAVideo = asyncHandler(async (req, res) => {
   if (!title || !description) {
     throw new ApiError(400, "title and description required");
   }
-  if (!req.files.videoFile || !req.files.thumbnail) {
-    if (req.files.videoFile) {
-      fs.unlinkSync(req.files?.videoFile[0]?.path);
-    }
-    if (req.files.thumbnail) {
-      fs.unlinkSync(req.files?.thumbnail[0]?.path);
-    }
-    throw new ApiError(401, "either videoFile or thumbnail is missing");
-  }
+  // if (!req.files.videoFile || !req.files.thumbnail) {
+  //   if (req.files.videoFile) {
+  //     fs.unlinkSync(req.files?.videoFile[0]?.path);
+  //   }
+  //   if (req.files.thumbnail) {
+  //     fs.unlinkSync(req.files?.thumbnail[0]?.path);
+  //   }
+  //   throw new ApiError(401, "either videoFile or thumbnail is missing");
+  // }
   const videoPath = req.files?.videoFile[0]?.path;
   const thumbnailPath = req.files?.thumbnail[0]?.path;
 
@@ -50,6 +65,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     videoFile: videoFile.secure_url,
     thumbnail: thumbnail.secure_url,
     duration: videoFile?.duration,
+    owner: req.user?._id,
   });
 
   console.log("Video", vid);
@@ -140,7 +156,6 @@ const deleteVideo = asyncHandler(async (req, res) => {
   }
 
   const clouddelete = await deleteCloudinary(video.videoFile);
-  
 
   return res
     .status(200)
