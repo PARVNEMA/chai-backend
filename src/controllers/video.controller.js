@@ -28,6 +28,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
+  console.log(req.body);
+  
   const { title, description } = req.body;
   // TODO: get video, upload to cloudinary, create video
   if (!title || !description) {
