@@ -31,10 +31,9 @@ const getVideoComments = asyncHandler(async (req, res) => {
           },
         ],
       },
-     
     },
     { $unwind: "$owner" },
-
+    // { $group: { _id: "$_id", comments: { $push: "$owner" } } },
   ]);
 
   if (comments.length == 0) {
