@@ -29,7 +29,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 const publishAVideo = asyncHandler(async (req, res) => {
   console.log(req.body);
-  
+
   const { title, description } = req.body;
   // TODO: get video, upload to cloudinary, create video
   if (!title || !description) {
@@ -84,13 +84,40 @@ const getVideoById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Video not found");
   }
 
-  const video = await Video.findOne({ _id: videoId });
+  // const video = await Video.findOne({ _id: videoId });
   // OR  const video = await Video.findOne({ _id: mongoose.Types.ObjectId(videoId) });
+  const video = await Video.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(videoId) } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
+    { $unwind: "$owner" },
+    {
+      $project: {
+        "owner.avatar": 1,
+        "owner.username": 1,
+        "owner.fullName": 1,
+        videoFile: 1,
+        thumbnail: 1,
+        title: 1,
+        description: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        likes: 1,
+      },
+    },
+
+    // Flatten the owner array to an object
+  ]);
   if (!video) {
     throw new ApiError(400, "Video not found");
   }
-
-  return res.status(200).json(new ApiResponse(200, video, "Video found"));
+  return res.status(200).json(new ApiResponse(200, video[0], "Video found"));
   //TODO: get video by id
 });
 
