@@ -39,7 +39,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(
-        new ApiResponse(200, unsubscribe, "channel unsubscribed successfully")
+        new ApiResponse(200, unsubscribe, "channel unsubscribed ")
       );
   }
   // TODO: toggle subscription
@@ -111,6 +111,25 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     );
   }
 });
+const isSubscribedAlready = asyncHandler(async (req, res) => {
+  const { channelId } = req.params;
+  const alreadysubscribed = await Subscription.findOne({
+    channel: channelId,
+    subscriber: req.user?._id,
+  });
+   if(alreadysubscribed){
+    return res.status(200).json(
+      new ApiResponse(200, "user is already subscribed", {
+        alreadysubscribed:true
+      })
+    );
+   }
+   return res.status(200).json(
+    new ApiResponse(200, "user is not subscribed", {
+      alreadysubscribed:false
+    })
+  );
+});
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
@@ -166,4 +185,4 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
   );
 });
 
-export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
+export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels,isSubscribedAlready };
