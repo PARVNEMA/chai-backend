@@ -36,6 +36,22 @@ const toggleVideoLike = asyncHandler(async (req, res) => {
   //TODO: toggle like on video
 });
 
+const alreadyLiked =asyncHandler(async(req,res)=>{
+  const { videoId } = req.params;
+  if (!isValidObjectId(videoId)) {
+    throw new ApiError(400, "video not found");
+  }
+
+  const alreadylikedornot = await Like.findOne({
+    video: new mongoose.Types.ObjectId(videoId),
+    likedBy: new mongoose.Types.ObjectId(req.user?._id),
+  });
+
+  if(alreadylikedornot){
+    return res.status(200).json(new ApiResponse(200, {liked:true},"video is already liked"))
+  }
+  return res.status(200).json(new ApiResponse(200, {liked:false},"video is not liked"))
+})
 const toggleCommentLike = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
 
@@ -129,4 +145,4 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, likedVideos, "liked videos"));
 });
 
-export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos };
+export { toggleCommentLike, toggleTweetLike, toggleVideoLike, getLikedVideos ,alreadyLiked};
