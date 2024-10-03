@@ -38,9 +38,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     });
     return res
       .status(200)
-      .json(
-        new ApiResponse(200, unsubscribe, "channel unsubscribed ")
-      );
+      .json(new ApiResponse(200, unsubscribe, "channel unsubscribed "));
   }
   // TODO: toggle subscription
 });
@@ -117,30 +115,36 @@ const isSubscribedAlready = asyncHandler(async (req, res) => {
     channel: channelId,
     subscriber: req.user?._id,
   });
-   if(alreadysubscribed){
+  if (alreadysubscribed) {
     return res.status(200).json(
       new ApiResponse(200, "user is already subscribed", {
-        alreadysubscribed:true
+        alreadysubscribed: true,
       })
     );
-   }
-   return res.status(200).json(
+  }
+  return res.status(200).json(
     new ApiResponse(200, "user is not subscribed", {
-      alreadysubscribed:false
+      alreadysubscribed: false,
     })
   );
 });
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
-  const { subscriberId } = req.params;
-  // if (!isValidObjectId(subscriberId)) {
-  //   throw new ApiError(400, "Invalid subscriber id");
-  // }
+  const { channelId } = req.params;
+
+  console.log("subscriberId", channelId);
+
+  // Check if subscriberId is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(channelId)) {
+    throw new ApiError(400, "Invalid subscriber ID");
+  }
+
+  // Find subscriptions based on the subscriberId
   const subscribed = await Subscription.aggregate([
     {
       $match: {
-        subscriber: new mongoose.Types.ObjectId(subscriberId),
+        subscriber: new mongoose.Types.ObjectId(channelId),
       },
     },
     {
@@ -148,41 +152,42 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         from: "users",
         localField: "channel",
         foreignField: "_id",
-        as: "subscribed",
+        as: "subscribedchannels",
       },
     },
     {
-      $addFields: {
-        subscribed: {
-          $first: "$subscribed",
-        },
-      },
-    },
-    {
-      $addFields: {
-        totalchannelsubscribed: {
-          $size: "$subscribed",
-        },
-      },
+      $unwind: "$subscribedchannels",
     },
     {
       $project: {
-        totalchannelsubscribed: 1,
-        subscribed: {
-          username: 1,
-          fullname: 1,
-        },
+        _id: 1,
+        "subscribedchannels._id": 1,
+        "subscribedchannels.fullname": 1,
+        "subscribedchannels.username": 1,
+        "subscribedchannels.avatar": 1,
+        createdAt: 1,
       },
     },
   ]);
+
+  // console.log("subscribed", subscribed);
+
+  // Check if there are no subscribed channels
   if (!subscribed || subscribed.length === 0) {
     throw new ApiError(404, "No channel subscribed");
   }
+
+  // Return the response with the fetched subscriptions
   return res.status(200).json(
-    new ApiResponse(200, "All subscribed channel fetched successfully", {
+    new ApiResponse(200, "All subscribed channels fetched successfully", {
       subscribed,
     })
   );
 });
 
-export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels,isSubscribedAlready };
+export {
+  toggleSubscription,
+  getUserChannelSubscribers,
+  getSubscribedChannels,
+  isSubscribedAlready,
+};
