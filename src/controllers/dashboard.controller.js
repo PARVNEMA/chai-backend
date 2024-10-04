@@ -9,6 +9,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const getChannelStats = asyncHandler(async (req, res) => {
   // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
   const user = req.user?._id;
+  console.log(user);
 
   const totalSubscribers = await Subscription.aggregate([
     {
@@ -28,6 +29,8 @@ const getChannelStats = asyncHandler(async (req, res) => {
       },
     },
   ]);
+  console.log(totalSubscribers);
+
   if (!totalSubscribers || totalSubscribers.length == 0) {
     return new ApiResponse(
       410,

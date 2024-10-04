@@ -45,7 +45,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-  const { channelId } = req.params;
+  const { subscriberId } = req.params;
   //   const existchannel = await User.findById(channelId);
   //   if (!existchannel) {
   //     throw new ApiError(400, "Channel not Found");
@@ -55,7 +55,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     const userSubscribers = await Subscription.aggregate([
       {
         $match: {
-          channel: new mongoose.Types.ObjectId(channelId),
+          channel: new mongoose.Types.ObjectId(subscriberId),
         },
       },
       {
@@ -97,14 +97,14 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(
           200,
-          userSubscribers,
+          { number: userSubscribers.length, userSubscribers },
           "all subscribers fetched usccessfully"
         )
       );
   } catch (error) {
     throw new ApiError(
       500,
-      error,
+      error.message,
       "something went wrong while fetching subscribers"
     );
   }
