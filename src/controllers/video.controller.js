@@ -86,6 +86,12 @@ const getVideoById = asyncHandler(async (req, res) => {
 
   // const video = await Video.findOne({ _id: videoId });
   // OR  const video = await Video.findOne({ _id: mongoose.Types.ObjectId(videoId) });
+  const updateViews = await Video.findByIdAndUpdate(
+    new mongoose.Types.ObjectId(videoId),
+    {
+      $inc: { views: 1 },
+    }
+  );
   const video = await Video.aggregate([
     { $match: { _id: new mongoose.Types.ObjectId(videoId) } },
     {
@@ -110,11 +116,13 @@ const getVideoById = asyncHandler(async (req, res) => {
         createdAt: 1,
         updatedAt: 1,
         likes: 1,
+        views: 1,
       },
     },
 
     // Flatten the owner array to an object
   ]);
+
   if (!video) {
     throw new ApiError(400, "Video not found");
   }
