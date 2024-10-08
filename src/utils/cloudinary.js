@@ -29,7 +29,7 @@ const uploadOnCloudinary = async (localFilePath) => {
 const deleteCloudinary = async (itemId) => {
   try {
     await cloudinary.uploader.destroy(itemId, function (result) {
-      throw new ApiResponse(200, "deleted on cloudinary");
+     return new ApiResponse(200, "deleted on cloudinary");
     });
   } catch (error) {
     throw new ApiError(

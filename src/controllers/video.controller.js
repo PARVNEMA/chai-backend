@@ -235,6 +235,24 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     );
 });
 
+const allVideosOfUser=asyncHandler(async(req,res)=>{
+  const {userId}=req.params;
+  if(!userId){
+    throw new ApiError(400,"userId missing")
+  }
+
+  const allChannelVideos=await Video.aggregate([
+    {
+      $match:{owner:new mongoose.Types.ObjectId(userId)}
+    }
+  ])
+
+  if(!allChannelVideos){
+    throw new ApiResponse(200,"no videos published till now")
+  }
+
+  return res.status(200).json(new ApiResponse(200,allChannelVideos,"all videos fetched successfully"));
+})
 export {
   getAllVideos,
   publishAVideo,
@@ -242,4 +260,5 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
+  allVideosOfUser
 };
