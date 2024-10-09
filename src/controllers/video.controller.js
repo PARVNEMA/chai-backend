@@ -92,6 +92,20 @@ const getVideoById = asyncHandler(async (req, res) => {
       $inc: { views: 1 },
     }
   );
+//  console.log("user =",req.user);
+
+    const updateWatchHistory = await User.findByIdAndUpdate(
+      new mongoose.Types.ObjectId(req.user?._id),
+      {
+        $push: { watchHistory: new mongoose.Types.ObjectId(videoId) },
+      },
+      {
+        new: true,
+      }
+    );
+    // console.log("updateWatchHistory", updateWatchHistory);
+
+
   const video = await Video.aggregate([
     { $match: { _id: new mongoose.Types.ObjectId(videoId) } },
     {
@@ -235,24 +249,28 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     );
 });
 
-const allVideosOfUser=asyncHandler(async(req,res)=>{
-  const {userId}=req.params;
-  if(!userId){
-    throw new ApiError(400,"userId missing")
+const allVideosOfUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    throw new ApiError(400, "userId missing");
   }
 
-  const allChannelVideos=await Video.aggregate([
+  const allChannelVideos = await Video.aggregate([
     {
-      $match:{owner:new mongoose.Types.ObjectId(userId)}
-    }
-  ])
+      $match: { owner: new mongoose.Types.ObjectId(userId) },
+    },
+  ]);
 
-  if(!allChannelVideos){
-    throw new ApiResponse(200,"no videos published till now")
+  if (!allChannelVideos) {
+    throw new ApiResponse(200, "no videos published till now");
   }
 
-  return res.status(200).json(new ApiResponse(200,allChannelVideos,"all videos fetched successfully"));
-})
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, allChannelVideos, "all videos fetched successfully")
+    );
+});
 export {
   getAllVideos,
   publishAVideo,
@@ -260,5 +278,5 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
-  allVideosOfUser
+  allVideosOfUser,
 };
